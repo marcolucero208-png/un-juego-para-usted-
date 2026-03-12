@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍽️ El Restaurante de los Animales Locos</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800&family=Playfair+Display:ital,wght@0,500;1,400;1,600&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --rosa:#ff6b9d; --coral:#ff8b6b; --amarillo:#ffd93d;
+  --verde:#6bcb77; --morado:#c77dff; --lila:#e8d5ff;
+  --fondo1:#1a0a2e; --fondo2:#2d0b3e; --fondo3:#0f1a3a;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{min-height:100vh;overflow-x:hidden;}
+ 
+body {
+  font-family:'Nunito',sans-serif;
+  background: radial-gradient(ellipse at 20% 20%, #2d0b3e 0%, #1a0a2e 40%, #0f1a3a 100%);
+  min-height:100vh;
+  position:relative;
+}
+ 
+/* ══════════════════════════════
+   FONDO MÁGICO ESTRELLADO
+══════════════════════════════ */
+#canvas-bg {
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+}
+ 
+/* Nebulosas */
+.nebula {
+  position:fixed;border-radius:50%;pointer-events:none;z-index:0;
+  filter:blur(60px);animation:pulsarNebula ease-in-out infinite alternate;
+}
+.nebula1{width:500px;height:400px;top:-100px;left:-150px;background:radial-gradient(circle,rgba(199,125,255,.25),transparent 70%);animation-duration:8s;}
+.nebula2{width:400px;height:500px;bottom:-100px;right:-120px;background:radial-gradient(circle,rgba(255,107,157,.2),transparent 70%);animation-duration:11s;animation-delay:2s;}
+.nebula3{width:350px;height:350px;top:40%;left:40%;background:radial-gradient(circle,rgba(77,150,255,.15),transparent 70%);animation-duration:14s;animation-delay:4s;}
+@keyframes pulsarNebula{from{opacity:.6;transform:scale(1);}to{opacity:1;transform:scale(1.15);}}
+ 
+/* Pétalos flotantes de fondo */
+.petalo-fondo {
+  position:fixed;pointer-events:none;z-index:1;
+  animation:petaloCae linear infinite;
+  font-size:1.1rem;opacity:0;
+}
+@keyframes petaloCae{
+  0%{transform:translateY(-40px) rotate(0deg) translateX(0);opacity:0;}
+  10%{opacity:.7;}
+  90%{opacity:.4;}
+  100%{transform:translateY(110vh) rotate(360deg) translateX(40px);opacity:0;}
+}
+ 
+.contenedor {
+  position:relative;z-index:2;
+  max-width:660px;margin:0 auto;
+  padding:24px 16px 80px;
+}
+ 
+.pantalla{display:none;animation:entrar .5s cubic-bezier(.34,1.56,.64,1);}
+.pantalla.activa{display:block;}
+@keyframes entrar{
+  from{opacity:0;transform:translateY(28px) scale(.96);}
+  to{opacity:1;transform:translateY(0) scale(1);}
+}
+ 
+/* ══ INICIO ══ */
+.titulo {
+  font-family:'Fredoka One',cursive;
+  font-size:clamp(2rem,7vw,3.2rem);
+  color:#fff;text-align:center;margin-top:28px;
+  text-shadow:0 0 30px rgba(199,125,255,.8), 2px 2px 0 rgba(255,107,157,.5);
+  line-height:1.15;
+}
+.subtitulo{text-align:center;font-size:1.05rem;color:rgba(255,255,255,.55);margin:10px 0 26px;font-weight:700;}
+ 
+.card-glass {
+  background:rgba(255,255,255,.07);
+  backdrop-filter:blur(20px);
+  border-radius:28px;
+  border:1.5px solid rgba(255,255,255,.15);
+  padding:30px 24px;
+  box-shadow:0 8px 40px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.1);
+  text-align:center;
+}
+.emoji-grande{font-size:4.5rem;display:block;margin-bottom:16px;animation:wobble 2s ease-in-out infinite;}
+@keyframes wobble{0%,100%{transform:rotate(-6deg);}50%{transform:rotate(6deg);}}
+.desc{font-size:1.02rem;color:rgba(255,255,255,.8);line-height:1.75;margin-bottom:26px;}
+ 
+/* ══ BOTONES ══ */
+.btn{
+  display:inline-block;padding:13px 30px;border-radius:50px;border:none;cursor:pointer;
+  font-family:'Fredoka One',cursive;font-size:1.15rem;
+  transition:transform .15s,box-shadow .15s;
+}
+.btn:active{transform:scale(.96)!important;}
+.btn-glow{
+  background:linear-gradient(135deg,var(--rosa),var(--morado));
+  color:#fff;box-shadow:0 5px 25px rgba(255,107,157,.5);
+}
+.btn-glow:hover{transform:translateY(-3px);box-shadow:0 8px 35px rgba(255,107,157,.7);}
+.btn-verde{background:linear-gradient(135deg,var(--verde),#4abb57);color:#fff;box-shadow:0 5px 20px rgba(107,203,119,.4);}
+.btn-verde:hover{transform:translateY(-3px);}
+.btn-group{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:18px;}
+ 
+/* ══ JUEGO HUD ══ */
+.hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:8px;flex-wrap:wrap;}
+.stat-box{
+  background:rgba(255,255,255,.08);backdrop-filter:blur(10px);
+  border-radius:14px;padding:9px 16px;
+  border:1px solid rgba(255,255,255,.15);
+  font-weight:800;font-size:1.05rem;color:#fff;
+}
+.ronda-badge{
+  background:linear-gradient(135deg,rgba(199,125,255,.4),rgba(155,77,255,.4));
+  backdrop-filter:blur(10px);
+  color:#fff;font-family:'Fredoka One',cursive;
+  font-size:1rem;padding:7px 18px;border-radius:50px;
+  border:1px solid rgba(199,125,255,.4);
+}
+ 
+.progreso-wrap{display:flex;gap:8px;justify-content:center;margin-bottom:14px;}
+.prog-dot{
+  width:38px;height:10px;border-radius:50px;
+  background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);
+  transition:background .4s,transform .3s;
+}
+.prog-dot.hecho{background:var(--verde);border-color:var(--verde);transform:scaleY(1.3);}
+.prog-dot.mal{background:#ff6b6b;border-color:#ff6b6b;}
+ 
+.barra-wrap{background:rgba(255,255,255,.1);border-radius:50px;height:11px;overflow:hidden;margin-bottom:18px;border:1px solid rgba(255,255,255,.1);}
+.barra{height:100%;border-radius:50px;background:linear-gradient(90deg,var(--verde),var(--amarillo),var(--coral));transition:width .25s linear;}
+ 
+/* ══ CLIENTE ══ */
+.cliente-card{
+  background:rgba(255,255,255,.08);backdrop-filter:blur(16px);
+  border-radius:22px;border:1.5px solid rgba(255,255,255,.15);
+  padding:22px;margin-bottom:16px;text-align:center;
+  box-shadow:0 4px 30px rgba(0,0,0,.2);
+}
+.animal{font-size:5rem;display:block;margin-bottom:8px;animation:saltar 1s ease-in-out infinite;}
+@keyframes saltar{0%,100%{transform:translateY(0);}50%{transform:translateY(-10px);}}
+.nombre-animal{font-family:'Fredoka One',cursive;font-size:1.5rem;color:#ffb3d1;margin-bottom:8px;}
+.pedido{
+  font-size:1rem;color:rgba(255,255,255,.85);
+  background:rgba(255,255,255,.07);border-radius:12px;
+  padding:10px 16px;display:inline-block;
+  border:1px solid rgba(255,255,255,.12);
+  font-weight:700;line-height:1.5;
+}
+.instruccion{text-align:center;font-size:.85rem;color:rgba(255,255,255,.35);font-weight:700;margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px;}
+ 
+/* ══ OPCIONES ══ */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:14px;}
+.op{
+  background:rgba(255,255,255,.07);backdrop-filter:blur(10px);
+  border:1.5px solid rgba(255,255,255,.12);border-radius:18px;
+  padding:15px 10px;cursor:pointer;
+  transition:all .2s cubic-bezier(.34,1.56,.64,1);
+  text-align:center;font-family:'Nunito',sans-serif;
+  font-weight:800;font-size:.9rem;color:rgba(255,255,255,.85);
+}
+.op:hover{transform:scale(1.07);border-color:rgba(255,107,157,.6);background:rgba(255,107,157,.12);box-shadow:0 6px 20px rgba(255,107,157,.25);}
+.op span{font-size:2.2rem;display:block;margin-bottom:6px;}
+.op.correcto{background:rgba(107,203,119,.2);border-color:var(--verde);transform:scale(1.08);}
+.op.incorrecto{background:rgba(255,107,107,.15);border-color:#ff6b6b;transform:scale(.95);}
+.op:disabled{cursor:default;}
+ 
+/* ══ FEEDBACK ══ */
+.fb-overlay{
+  position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  z-index:100;pointer-events:none;background:rgba(0,0,0,.3);backdrop-filter:blur(4px);
+}
+.fb-box{
+  background:rgba(30,15,50,.9);backdrop-filter:blur(20px);
+  border-radius:24px;padding:26px 38px;text-align:center;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+  transform:scale(0);transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  pointer-events:all;max-width:310px;width:90%;
+}
+.fb-box.show{transform:scale(1);}
+.fb-box.ok{border:2px solid var(--verde);}
+.fb-box.mal{border:2px solid #ff6b6b;}
+.fb-ico{font-size:3.2rem;display:block;margin-bottom:8px;}
+.fb-tit{font-family:'Fredoka One',cursive;font-size:1.5rem;color:#fff;margin-bottom:5px;}
+.fb-sub{font-size:.88rem;color:rgba(255,255,255,.6);font-weight:600;}
+ 
+/* ══ RESULTADO ══ */
+.res-card{
+  background:rgba(255,255,255,.07);backdrop-filter:blur(20px);
+  border-radius:28px;padding:32px 24px;text-align:center;
+  box-shadow:0 10px 50px rgba(0,0,0,.3);
+  border:1.5px solid rgba(255,255,255,.15);
+  margin-bottom:26px;
+}
+.res-stars{font-size:2.8rem;margin-bottom:8px;}
+.res-titulo{font-family:'Fredoka One',cursive;font-size:1.9rem;color:#ffb3d1;margin-bottom:6px;}
+.res-score{font-size:3rem;font-weight:800;color:var(--lila);margin:12px 0;}
+.res-msg{font-size:.98rem;color:rgba(255,255,255,.75);line-height:1.6;padding:12px;background:rgba(255,255,255,.05);border-radius:12px;margin-bottom:6px;}
+ 
+/* ══════════════════════════════════════
+   CARTA POÉTICA TIERNA - FONDO PRECIOSO
+══════════════════════════════════════ */
+.carta-outer {
+  position:relative;
+  margin-top:8px;
+  border-radius:30px;
+  padding:3px;
+  background: linear-gradient(135deg,
+    #ff9de2, #c77dff, #7eb8ff, #ff9de2, #ffd6a5, #c77dff);
+  background-size: 300% 300%;
+  animation: gradientBorder 6s ease infinite;
+  box-shadow:
+    0 0 40px rgba(199,125,255,.4),
+    0 0 80px rgba(255,107,157,.2);
+}
+@keyframes gradientBorder{
+  0%{background-position:0% 50%;}
+  50%{background-position:100% 50%;}
+  100%{background-position:0% 50%;}
+}
+ 
+.carta-wrap {
+  position:relative;
+  border-radius:28px;
+  overflow:hidden;
+  padding:48px 32px 40px;
+  background: linear-gradient(160deg,#1e0635 0%,#2a0d40 40%,#180e3a 100%);
+}
+ 
+/* Fondo estrellado dentro de la carta */
+.carta-estrellas {
+  position:absolute;inset:0;pointer-events:none;overflow:hidden;
+}
+.estrellita-carta {
+  position:absolute;border-radius:50%;
+  background:#fff;animation:twinkleC ease-in-out infinite alternate;
+}
+@keyframes twinkleC{from{opacity:.15;transform:scale(.8);}to{opacity:.9;transform:scale(1.2);}}
+ 
+/* Aurora boreal suave dentro de carta */
+.aurora {
+  position:absolute;pointer-events:none;
+  filter:blur(40px);opacity:.25;border-radius:50%;
+}
+.aurora1{width:300px;height:200px;top:0;left:-60px;background:linear-gradient(90deg,#c77dff,#4d96ff);animation:auroraMove 10s ease-in-out infinite alternate;}
+.aurora2{width:250px;height:180px;bottom:20px;right:-40px;background:linear-gradient(90deg,#ff6b9d,#c77dff);animation:auroraMove 13s ease-in-out infinite alternate-reverse;}
+.aurora3{width:200px;height:150px;top:40%;left:30%;background:linear-gradient(90deg,#4d96ff,#6bcb77);animation:auroraMove 9s ease-in-out infinite alternate;opacity:.15;}
+@keyframes auroraMove{from{transform:translateX(0) translateY(0);}to{transform:translateX(30px) translateY(20px);}}
+ 
+/* Pétalos dentro de carta */
+.petalo-carta {
+  position:absolute;pointer-events:none;
+  font-size:1rem;animation:petaloCarta linear infinite;opacity:0;
+}
+@keyframes petaloCarta{
+  0%{transform:translateY(-30px) rotate(0deg);opacity:0;}
+  15%{opacity:.5;}85%{opacity:.3;}
+  100%{transform:translateY(300px) rotate(180deg);opacity:0;}
+}
+ 
+/* Icono sobre */
+.carta-icono{
+  position:absolute;top:-20px;left:50%;transform:translateX(-50%);
+  font-size:2.4rem;
+  background:linear-gradient(135deg,#2a0d40,#1e0635);
+  padding:4px 14px;border-radius:50px;
+  border:2px solid rgba(199,125,255,.4);
+  box-shadow:0 0 20px rgba(199,125,255,.4);
+  z-index:5;
+}
+ 
+/* Línea decorativa */
+.carta-linea{
+  width:70%;height:1px;margin:0 auto 24px;position:relative;z-index:2;
+  background:linear-gradient(90deg,transparent,rgba(199,125,255,.6),rgba(255,107,157,.5),transparent);
+}
+.carta-linea.abajo{margin:24px auto 0;}
+ 
+/* TEXTO POÉTICO */
+.carta-poema{
+  font-family:'Playfair Display',serif;
+  font-size:1.07rem;
+  color:rgba(255,230,245,.85);
+  line-height:2.1;
+  text-align:center;
+  font-style:italic;
+  position:relative;z-index:2;
+}
+.carta-poema p{margin-bottom:20px;}
+.carta-poema .destacado{
+  font-size:1.18rem;font-weight:600;font-style:italic;
+  color:#ffb3d1;
+  text-shadow:0 0 20px rgba(255,107,157,.5);
+}
+.carta-poema .small-verso{
+  font-size:.96rem;
+  color:rgba(255,210,235,.65);
+}
+ 
+/* Firma */
+.carta-firma{
+  font-family:'Caveat',cursive;
+  font-size:1.2rem;
+  color:#ffb3d1;
+  font-weight:700;
+  text-align:right;
+  position:relative;z-index:2;
+  line-height:1.9;
+  margin-top:22px;
+}
+.firma-sub{
+  font-size:1rem;
+  color:rgba(255,180,210,.7);
+  font-family:'Caveat',cursive;
+  font-style:italic;
+}
+ 
+/* Corazones */
+.carta-corazones{
+  display:flex;justify-content:center;gap:12px;
+  margin-top:24px;flex-wrap:wrap;position:relative;z-index:2;
+}
+.cora{font-size:1.4rem;animation:latir 1.4s ease-in-out infinite;}
+.cora:nth-child(2){animation-delay:.2s;font-size:1.1rem;}
+.cora:nth-child(3){animation-delay:.4s;font-size:1.6rem;}
+.cora:nth-child(4){animation-delay:.6s;font-size:1.1rem;}
+.cora:nth-child(5){animation-delay:.8s;font-size:1.4rem;}
+@keyframes latir{0%,100%{transform:scale(1);}50%{transform:scale(1.5);}}
+ 
+/* CONFETTI */
+.confetti-pieza{position:fixed;animation:caer linear forwards;z-index:999;pointer-events:none;}
+@keyframes caer{
+  0%{transform:translateY(-80px) rotate(0deg);opacity:1;}
+  100%{transform:translateY(110vh) rotate(720deg);opacity:0;}
+}
+</style>
+</head>
+<body>
+ 
+<!-- Canvas para estrellas de fondo global -->
+<canvas id="canvas-bg"></canvas>
+ 
+<!-- Nebulosas de fondo -->
+<div class="nebula nebula1"></div>
+<div class="nebula nebula2"></div>
+<div class="nebula nebula3"></div>
+ 
+<div class="contenedor">
+ 
+  <!-- ══ INICIO ══ -->
+  <div class="pantalla activa" id="p-inicio">
+    <h1 class="titulo">🍽️ El Restaurante<br>de los Animales Locos</h1>
+    <p class="subtitulo">¡Solo 3 rondas para ser la chef del año! ⭐</p>
+    <div class="card-glass">
+      <span class="emoji-grande">👩‍🍳</span>
+      <p class="desc">
+        Los animales más hambrientos y dramáticos del mundo llegaron a tu restaurante,
+        ¡y solo <strong>TÚ</strong> puedes salvarlos!<br><br>
+        Lee el pedido, elige el plato correcto y hazlos felices antes de que se acabe el tiempo. 🐾🍕
+      </p>
+      <button class="btn btn-glow" onclick="iniciarJuego()">¡A cocinar! 🔥</button>
+    </div>
+  </div>
+ 
+  <!-- ══ JUEGO ══ -->
+  <div class="pantalla" id="p-juego">
+    <div class="hud">
+      <div class="stat-box">⭐ <span id="puntaje">0</span></div>
+      <div class="ronda-badge">Ronda <span id="ronda-num">1</span> de 3</div>
+      <div class="stat-box"><span id="vidas">❤️❤️❤️</span></div>
+    </div>
+    <div class="progreso-wrap" id="prog-dots"></div>
+    <div class="barra-wrap"><div class="barra" id="barra-tiempo"></div></div>
+    <div class="cliente-card">
+      <span class="animal" id="animal-emoji">🐶</span>
+      <div class="nombre-animal" id="nombre-animal">Firulais</div>
+      <div class="pedido" id="pedido-texto">"¡Quiero algo!"</div>
+    </div>
+    <p class="instruccion">👇 elige el plato correcto 👇</p>
+    <div class="grid" id="opciones"></div>
+  </div>
+ 
+  <!-- ══ FIN ══ -->
+  <div class="pantalla" id="p-fin">
+ 
+    <div class="res-card">
+      <div class="res-stars" id="res-stars">⭐⭐⭐</div>
+      <div class="res-titulo" id="res-titulo">¡Increíble chef!</div>
+      <div class="res-score" id="res-score">0 pts</div>
+      <div class="res-msg" id="res-msg"></div>
+      <div class="btn-group">
+        <button class="btn btn-glow" onclick="iniciarJuego()">🔄 Jugar de nuevo</button>
+        <button class="btn btn-verde" onclick="mostrarPantalla('p-inicio')">🏠 Inicio</button>
+      </div>
+    </div>
+ 
+    <!-- 💌 CARTA POÉTICA TIERNA -->
+    <div class="carta-outer">
+      <div class="carta-wrap">
+ 
+        <!-- Estrellas internas -->
+        <div class="carta-estrellas" id="carta-estrellas"></div>
+ 
+        <!-- Auroras boreales -->
+        <div class="aurora aurora1"></div>
+        <div class="aurora aurora2"></div>
+        <div class="aurora aurora3"></div>
+ 
+        <!-- Pétalos internos -->
+        <div class="petalo-carta" style="left:10%;animation-duration:7s;animation-delay:0s;">🌸</div>
+        <div class="petalo-carta" style="left:30%;animation-duration:9s;animation-delay:2s;">✿</div>
+        <div class="petalo-carta" style="left:60%;animation-duration:8s;animation-delay:1s;">🌷</div>
+        <div class="petalo-carta" style="left:80%;animation-duration:10s;animation-delay:3s;">🌸</div>
+        <div class="petalo-carta" style="left:50%;animation-duration:6s;animation-delay:4s;">✦</div>
+ 
+        <div class="carta-icono">💌</div>
+        <div class="carta-linea"></div>
+ 
+        <div class="carta-poema">
+ 
+          <p class="small-verso">Para ti, que hoy cargaste más de lo que debías...</p>
+ 
+          <p>Sé que hoy fue un día difícil.<br>
+          De esos que pesan sin que nadie lo vea,<br>
+          de esos que se meten en los hombros<br>
+          y no te sueltan fácil.</p>
+ 
+          <p class="destacado">Y quiero que sepas que eso es válido.<br>
+          Que está bien que haya días así.<br>
+          Que no tienes que fingir que estás bien<br>
+          cuando por dentro te sientes cansada.</p>
+ 
+          <p>Porque eres humana.<br>
+          Y ser humana significa que a veces duele,<br>
+          que a veces el mundo se siente muy grande<br>
+          y tú muy pequeña dentro de él.</p>
+ 
+          <p class="destacado">Pero aquí estoy yo.<br>
+          Y pienso en ti.<br>
+          Y te quiero con todo lo que eres,<br>
+          incluyendo los días en que no puedes con todo.</p>
+ 
+          <p>Eres de las personas más bonitas que conozco,<br>
+          no solo por fuera,<br>
+          sino por la forma en que sientes,<br>
+          por la forma en que cuidas,<br>
+          por esa luz que tienes<br>
+          aunque a veces tú no la veas.</p>
+ 
+          <p class="destacado">Ojalá esta noche puedas descansar.<br>
+          Ojalá mañana sea más suave.<br>
+          Y ojalá sepas que no estás sola,<br>
+          que nunca lo has estado.</p>
+ 
+          <p class="small-verso">Te quiero muchísimo. Siempre. 🌙</p>
+ 
+        </div>
+ 
+        <div class="carta-linea abajo"></div>
+ 
+        <div class="carta-firma">
+          Con todo mi amor, siempre para ti,<br>
+          <strong>Att: Tu Ojitos Bonitos 👀💕</strong><br>
+          <span class="firma-sub">(que yo no te voy a dejar solita,<br>ni estresada, ni nada. Ñoño 🫂✨)</span>
+        </div>
+ 
+        <div class="carta-corazones">
+          <span class="cora">💗</span>
+          <span class="cora">🌸</span>
+          <span class="cora">💜</span>
+          <span class="cora">🌸</span>
+          <span class="cora">💗</span>
+        </div>
+ 
+      </div>
+    </div><!-- carta-outer -->
+ 
+  </div><!-- p-fin -->
+ 
+</div><!-- contenedor -->
+ 
+<!-- FEEDBACK -->
+<div class="fb-overlay" id="fb-overlay" style="display:none;">
+  <div class="fb-box" id="fb-box">
+    <span class="fb-ico" id="fb-ico">✅</span>
+    <div class="fb-tit" id="fb-tit">¡Perfecto!</div>
+    <div class="fb-sub" id="fb-sub"></div>
+  </div>
+</div>
+ 
+<script>
+// ══════════════════════════════
+// CANVAS ESTRELLAS FONDO GLOBAL
+// ══════════════════════════════
+(function(){
+  const canvas=document.getElementById('canvas-bg');
+  const ctx=canvas.getContext('2d');
+  let stars=[];
+ 
+  function resize(){
+    canvas.width=window.innerWidth;
+    canvas.height=window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize',resize);
+ 
+  // Crear estrellas
+  for(let i=0;i<220;i++){
+    stars.push({
+      x:Math.random()*window.innerWidth,
+      y:Math.random()*window.innerHeight,
+      r:Math.random()*1.8+.3,
+      alpha:Math.random(),
+      speed:Math.random()*.02+.005,
+      color: Math.random()>.7 ? '#ffb3d1' : Math.random()>.5 ? '#e8d5ff' : '#ffffff',
+    });
+  }
+ 
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    stars.forEach(s=>{
+      s.alpha+=s.speed;
+      if(s.alpha>1||s.alpha<0) s.speed*=-1;
+      ctx.beginPath();
+      ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=s.color;
+      ctx.globalAlpha=s.alpha*.9;
+      ctx.fill();
+    });
+    ctx.globalAlpha=1;
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+ 
+// Estrellas dentro de la carta
+function crearEstrellasEnCarta(){
+  const cont=document.getElementById('carta-estrellas');
+  if(!cont) return;
+  cont.innerHTML='';
+  for(let i=0;i<60;i++){
+    const s=document.createElement('div');
+    s.className='estrellita-carta';
+    const sz=Math.random()*2+.5;
+    s.style.cssText=`
+      width:${sz}px;height:${sz}px;
+      top:${Math.random()*100}%;
+      left:${Math.random()*100}%;
+      animation-duration:${Math.random()*3+1.5}s;
+      animation-delay:${Math.random()*3}s;
+    `;
+    cont.appendChild(s);
+  }
+}
+ 
+// Pétalos flotantes globales
+(function(){
+  const emojis=['🌸','✿','🌷','✦','🌺','💮'];
+  for(let i=0;i<12;i++){
+    const p=document.createElement('div');
+    p.className='petalo-fondo';
+    p.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+    p.style.cssText=`
+      left:${Math.random()*100}%;
+      animation-duration:${Math.random()*12+8}s;
+      animation-delay:${Math.random()*10}s;
+    `;
+    document.body.appendChild(p);
+  }
+})();
+ 
+// ══════════════════════════════
+// DATOS CLIENTES
+// ══════════════════════════════
+const todosLosClientes=[
+  {
+    animal:'🐶',nombre:'Firulais el Perrito',
+    pedido:'"¡Quiero algo redondo, con queso y que llegue a mi casita!"',
+    respuesta:'pizza',
+    opciones:[
+      {e:'🍕',n:'Pizza de queso',id:'pizza'},
+      {e:'🍣',n:'Sushi de atún',id:'sushi'},
+      {e:'🥗',n:'Ensalada verde',id:'ensalada'},
+      {e:'🍜',n:'Ramen caliente',id:'ramen'},
+    ],
+    ok:['¡Firulais mueve la cola SUPERSÓNICO! 🐾💨','¡Guau guau! ¡La mejor chef del mundo!','¡Firulais llora de la emoción! 🧀😭'],
+    mal:['Firulais te mira con ojitos tristes... 🥺','¡Eso no era lo que pedí! ¡Guau!','Firulais sigue con hambre 😢'],
+  },
+  {
+    animal:'🐱',nombre:'Mimi la Gatita',
+    pedido:'"Miau~ algo del mar, fresco y crudo, por favoooor~"',
+    respuesta:'sushi',
+    opciones:[
+      {e:'🍔',n:'Hamburguesa BBQ',id:'hamburguesa'},
+      {e:'🍣',n:'Sushi de salmón',id:'sushi'},
+      {e:'🍦',n:'Helado de vainilla',id:'helado'},
+      {e:'🌮',n:'Taco jalapeño',id:'taco'},
+    ],
+    ok:['¡Mimi ronronea sin parar! 😻','¡Purr purr! ¡El mejor sushi del universo!','¡Mimi te da un topetazo de amor! 🐱'],
+    mal:['Mimi voltea y finge que no te conoce 😒','¡Miau! ¡Eso no era!','Mimi se va indignada a otra mesa 🐱💨'],
+  },
+  {
+    animal:'🐼',nombre:'Pan-Pan el Panda',
+    pedido:'"Oso... querer... cosas... verdes... y crujientes..."',
+    respuesta:'ensalada',
+    opciones:[
+      {e:'🍕',n:'Pizza familiar',id:'pizza'},
+      {e:'🍟',n:'Papas fritas',id:'papas'},
+      {e:'🥗',n:'Ensalada fresca',id:'ensalada'},
+      {e:'🍰',n:'Pastel de choco',id:'pastel'},
+    ],
+    ok:['¡Pan-Pan hace el baile del bambú! 🎋','¡Oso feliz! ¡Muy verde! ¡Muy bien!','¡Pan-Pan te da un abrazo de oso! 🐼🤗'],
+    mal:['Pan-Pan cae hacia atrás de la silla... 🐼💫','¡Oso triste... querer verde...!','Pan-Pan llora lágrimas de bambú 😭'],
+  },
+  {
+    animal:'🐧',nombre:'Pingu el Pingüino',
+    pedido:'"¡NOOT NOOT! ¡Quiero algo HELADO y DULCE!"',
+    respuesta:'helado',
+    opciones:[
+      {e:'🌯',n:'Burrito picante',id:'burrito'},
+      {e:'🍜',n:'Sopa ardiendo',id:'sopa'},
+      {e:'🍦',n:'Helado de fresa',id:'helado'},
+      {e:'🍖',n:'Costilla BBQ',id:'bbq'},
+    ],
+    ok:['¡Pingu hace su baile de la felicidad! 🐧💃','¡NOOT NOOT de la dicha!','¡Pingu quiere ser tu amiga para siempre! 🐧❤️'],
+    mal:['Pingu se congela del shock 🥶','¡NOOT NOOT de enojo!','Pingu resbala y cae... 🐧💥'],
+  },
+  {
+    animal:'🦊',nombre:'Zori la Zorra',
+    pedido:'"Mmm~ algo esponjoso, dulce, con velitas y glaseado~"',
+    respuesta:'pastel',
+    opciones:[
+      {e:'🎂',n:'Pastel de cumple',id:'pastel'},
+      {e:'🍝',n:'Pasta carbonara',id:'pasta'},
+      {e:'🥘',n:'Paella española',id:'paella'},
+      {e:'🍱',n:'Bento japonés',id:'bento'},
+    ],
+    ok:['¡Zori da una voltereta de alegría! 🦊✨','¡Exactamente lo que quería! ¡Eres la mejor!','¡Zori te regala una flor del bosque! 🌸'],
+    mal:['Zori te mira con sus ojos astutos... 🦊','¡No no no! ¡Quería algo dulce!','Zori se va a otra madriguera 😒'],
+  },
+  {
+    animal:'🦄',nombre:'Sparkle el Unicornio',
+    pedido:'"✨ Quiero algo mágico, colorido, con sirope de arcoíris ✨"',
+    respuesta:'pancakes',
+    opciones:[
+      {e:'🥞',n:'Pancakes arcoíris',id:'pancakes'},
+      {e:'🥩',n:'Filete a la plancha',id:'filete'},
+      {e:'🍲',n:'Estofado oscuro',id:'estofado'},
+      {e:'🥓',n:'Tocino crujiente',id:'tocino'},
+    ],
+    ok:['¡Sparkle brilla más que nunca! 🌈✨','¡Maravilloso! ¡Esto sí es mágico!','¡Sparkle te llena de brillantina! 🦄💖'],
+    mal:['La magia de Sparkle desaparece 😢','¡Eso no tiene magia!','Sparkle llora lágrimas de arcoíris 🌈😭'],
+  },
+];
+ 
+// ══════════════════════════════
+// ESTADO
+// ══════════════════════════════
+let puntaje=0,vidas=3,ronda=0;
+const MAX=3;
+let tiempoMax=13,tiempoRestante=13,timerInterval=null;
+let historial=[],clientesPartida=[];
+ 
+function mostrarPantalla(id){
+  document.querySelectorAll('.pantalla').forEach(p=>p.classList.remove('activa'));
+  const el=document.getElementById(id);
+  el.classList.add('activa');
+  el.style.animation='none';
+  requestAnimationFrame(()=>{el.style.animation='';});
+}
+ 
+function iniciarJuego(){
+  puntaje=0;vidas=3;ronda=0;historial=[];
+  clientesPartida=[...todosLosClientes].sort(()=>Math.random()-.5).slice(0,MAX);
+  mostrarPantalla('p-juego');
+  setTimeout(cargarRonda,250);
+}
+ 
+function cargarRonda(){
+  if(ronda>=MAX||vidas<=0) return terminarJuego();
+  actualizarHUD(); actualizarDots();
+  const c=clientesPartida[ronda];
+  document.getElementById('animal-emoji').textContent=c.animal;
+  document.getElementById('nombre-animal').textContent=c.nombre;
+  document.getElementById('pedido-texto').textContent=c.pedido;
+  const ops=[...c.opciones].sort(()=>Math.random()-.5);
+  const grid=document.getElementById('opciones');
+  grid.innerHTML='';
+  ops.forEach(op=>{
+    const btn=document.createElement('button');
+    btn.className='op';
+    btn.innerHTML=`<span>${op.e}</span>${op.n}`;
+    btn.onclick=()=>elegir(op.id,c,btn);
+    grid.appendChild(btn);
+  });
+  iniciarTemporizador();
+}
+ 
+function iniciarTemporizador(){
+  clearInterval(timerInterval);
+  tiempoMax=ronda===0?14:ronda===1?11:9;
+  tiempoRestante=tiempoMax;
+  actualizarBarra();
+  timerInterval=setInterval(()=>{
+    tiempoRestante-=.1;
+    actualizarBarra();
+    if(tiempoRestante<=0){
+      clearInterval(timerInterval);
+      vidas--;historial.push(false);
+      mostrarFeedback(false,'⏰','¡Se acabó el tiempo!','El animalito se fue con hambre... 😰');
+    }
+  },100);
+}
+ 
+function actualizarBarra(){
+  document.getElementById('barra-tiempo').style.width=Math.max(0,(tiempoRestante/tiempoMax)*100)+'%';
+}
+ 
+function elegir(id,cliente,btnEl){
+  clearInterval(timerInterval);
+  document.querySelectorAll('.op').forEach(b=>b.disabled=true);
+  const correcto=(id===cliente.respuesta);
+  btnEl.classList.add(correcto?'correcto':'incorrecto');
+  if(correcto){
+    puntaje+=Math.ceil(tiempoRestante*10);historial.push(true);
+    mostrarFeedback(true,'🎉','¡Correcto!',cliente.ok[Math.floor(Math.random()*cliente.ok.length)]);
+  } else {
+    document.querySelectorAll('.op').forEach(b=>{
+      const corr=cliente.opciones.find(o=>o.id===cliente.respuesta);
+      if(corr&&b.textContent.includes(corr.n)) b.classList.add('correcto');
+    });
+    vidas--;historial.push(false);
+    mostrarFeedback(false,'😅','¡Casi!',cliente.mal[Math.floor(Math.random()*cliente.mal.length)]);
+  }
+}
+ 
+function mostrarFeedback(ok,ico,tit,sub){
+  const ov=document.getElementById('fb-overlay');
+  const box=document.getElementById('fb-box');
+  document.getElementById('fb-ico').textContent=ico;
+  document.getElementById('fb-tit').textContent=tit;
+  document.getElementById('fb-sub').textContent=sub;
+  box.className='fb-box '+(ok?'ok':'mal');
+  ov.style.display='flex';
+  requestAnimationFrame(()=>box.classList.add('show'));
+  setTimeout(()=>{
+    box.classList.remove('show');
+    setTimeout(()=>{
+      ov.style.display='none';
+      ronda++;actualizarHUD();
+      if(vidas<=0) return terminarJuego();
+      cargarRonda();
+    },300);
+  },1700);
+}
+ 
+function actualizarHUD(){
+  document.getElementById('puntaje').textContent=puntaje;
+  document.getElementById('vidas').textContent='❤️'.repeat(Math.max(0,vidas));
+  document.getElementById('ronda-num').textContent=Math.min(ronda+1,MAX);
+}
+function actualizarDots(){
+  const w=document.getElementById('prog-dots');w.innerHTML='';
+  for(let i=0;i<MAX;i++){
+    const d=document.createElement('div');d.className='prog-dot';
+    if(i<historial.length) d.classList.add(historial[i]?'hecho':'mal');
+    w.appendChild(d);
+  }
+}
+ 
+function terminarJuego(){
+  clearInterval(timerInterval);
+  const aciertos=historial.filter(Boolean).length;
+  const pct=aciertos/MAX;
+  let estrellas,titulo,msg;
+  if(pct===1){
+    estrellas='⭐⭐⭐';titulo='¡Chef perfecta! 🏆';
+    msg='¡Todos los animales quedaron felices y con pancita llena gracias a ti! ¡Eres absolutamente increíble! 🍽️✨';
+    lanzarConfetti();
+  } else if(pct>=.6){
+    estrellas='⭐⭐';titulo='¡Muy buen trabajo!';
+    msg='Casi todos los animalitos quedaron satisfechos. ¡Tienes un talento enorme, chef! 🌟';
+  } else {
+    estrellas='⭐';titulo='¡Gracias por jugar!';
+    msg='Los animalitos tuvieron un día movido... ¡pero amaron tus ganas! Vuelve a intentarlo cuando quieras. 🐾💪';
+  }
+  document.getElementById('res-stars').textContent=estrellas;
+  document.getElementById('res-titulo').textContent=titulo;
+  document.getElementById('res-score').textContent=puntaje+' pts';
+  document.getElementById('res-msg').textContent=msg;
+  mostrarPantalla('p-fin');
+  crearEstrellasEnCarta();
+  setTimeout(()=>{
+    document.getElementById('p-fin').scrollIntoView({behavior:'smooth',block:'start'});
+  },400);
+}
+ 
+function lanzarConfetti(){
+  const cols=['#ff6b9d','#ffd93d','#6bcb77','#c77dff','#4d96ff','#ff8b6b','#fff'];
+  for(let i=0;i<90;i++){
+    setTimeout(()=>{
+      const p=document.createElement('div');p.className='confetti-pieza';
+      const s=Math.random()*10+5;
+      p.style.cssText=`left:${Math.random()*100}vw;top:0;`+
+        `background:${cols[Math.floor(Math.random()*cols.length)]};`+
+        `width:${s}px;height:${s}px;`+
+        `border-radius:${Math.random()>.5?'50%':'2px'};`+
+        `animation-duration:${Math.random()*2+1.5}s;`+
+        `animation-delay:${Math.random()*.5}s;`;
+      document.body.appendChild(p);
+      setTimeout(()=>p.remove(),3500);
+    },i*28);
+  }
+}
+</script>
+</body>
+</html>
